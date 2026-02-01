@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Recetas Panadería</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    
+    /* Pantalla de selección de recetas */
+    #menu {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    h1 {
+      color: #fff;
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+    }
+    
+    .recipe-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    
+    .recipe-btn {
+      padding: 25px 30px;
+      font-size: 1.4rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: transform 0.2s, box-shadow 0.2s;
+      color: #1a1a2e;
+    }
+    
+    .recipe-btn:hover, .recipe-btn:active {
+      transform: scale(1.02);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    .recipe-btn:nth-child(1) { background: #ff6b6b; }
+    .recipe-btn:nth-child(2) { background: #4ecdc4; }
+    .recipe-btn:nth-child(3) { background: #ffe66d; }
+    .recipe-btn:nth-child(4) { background: #95e1d3; }
+    .recipe-btn:nth-child(5) { background: #f38181; }
+    .recipe-btn:nth-child(6) { background: #aa96da; }
+    
+    /* Pantalla de ingredientes */
+    #ingredient-view {
+      display: none;
+      min-height: 100vh;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    .recipe-title {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.7;
+      color: inherit;
+    }
+    
+    .ingredient-text {
+      font-size: clamp(3rem, 12vw, 8rem);
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.2;
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.2);
+    }
+    
+    .progress {
+      position: absolute;
+      bottom: 30px;
+      font-size: 1.5rem;
+      opacity: 0.6;
+    }
+    
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: rgba(0,0,0,0.2);
+      border: none;
+      color: inherit;
+      font-size: 2rem;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .hint {
+      position: absolute;
+      bottom: 80px;
+      font-size: 1rem;
+      opacity: 0.5;
+    }
+    
+    /* Colores para ingredientes */
+    .bg-0 { background: #ff6b6b; color: #1a1a2e; }
+    .bg-1 { background: #4ecdc4; color: #1a1a2e; }
+    .bg-2 { background: #ffe66d; color: #1a1a2e; }
+    .bg-3 { background: #95e1d3; color: #1a1a2e; }
+    .bg-4 { background: #f38181; color: #1a1a2e; }
+    .bg-5 { background: #aa96da; color: #1a1a2e; }
+    .bg-6 { background: #fcbad3; color: #1a1a2e; }
+    .bg-7 { background: #a8d8ea; color: #1a1a2e; }
+    .bg-8 { background: #ffd93d; color: #1a1a2e; }
+    .bg-9 { background: #6bcb77; color: #1a1a2e; }
+    .bg-10 { background: #c9b1ff; color: #1a1a2e; }
+    .bg-11 { background: #ff9a8b; color: #1a1a2e; }
+    
+    /* Pantalla final */
+    .finished {
+      background: #2d3436 !important;
+      color: #fff !important;
+    }
+    
+    .finished .ingredient-text {
+      font-size: clamp(2rem, 8vw, 5rem);
+    }
+  </style>
+</head>
+<body>
+  <!-- Menú de recetas -->
+  <div id="menu">
+    <h1>🥖 Recetas</h1>
+    <div class="recipe-list" id="recipe-list"></div>
+  </div>
+  
+  <!-- Vista de ingrediente -->
+  <div id="ingredient-view">
+    <button class="back-btn" id="back-btn">←</button>
+    <div class="recipe-title" id="recipe-title"></div>
+    <div class="ingredient-text" id="ingredient-text"></div>
+    <div class="hint">Toca la pantalla o presiona cualquier tecla</div>
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <script>
+    const recipes = {
+      "Dobladita": [
+        "10 kg harina",
+        "200g sal",
+        "160g azúcar",
+        "2 kilos manteca",
+        "800g margarina",
+        "300g suero",
+        "20g levadura",
+        "60g mejorador"
+      ],
+      "Hallulla Integral": [
+        "6kg harina",
+        "4kg harina integral",
+        "160g sal",
+        "500g manteca",
+        "80g suero",
+        "100g levadura",
+        "60g mejorador de hallulla",
+        "agua"
+      ],
+      "Mini Baguette / Bollito Integral": [
+        "6kg harina",
+        "4kg harina integral",
+        "160g sal",
+        "500g manteca",
+        "80g suero",
+        "100g levadura",
+        "60g mejorador marraqueta",
+        "agua"
+      ],
+      "Pan Amasado": [
+        "10kg harina",
+        "200g sal",
+        "160g azúcar",
+        "600g manteca",
+        "80g suero",
+        "60g levadura",
+        "60g mejorador"
+      ],
+      "Hallulla Especial / Coliza / Bocado de Dama": [
+        "10kg harina",
+        "200g sal",
+        "176g azúcar",
+        "1,2kg manteca",
+        "500g margarina",
+        "76g suero",
+        "60g levadura",
+        "36g mejorador"
+      ],
+      "Poolish de Ciabatta": [
+        "── PASO 1 ──",
+        "1.25lt agua",
+        "1.25kg harina",
+        "3,5gr levadura",
+        "dejar fermentar",
+        "── PASO 2 ──",
+        "5kg de harina",
+        "100g sal",
+        "25g levadura",
+        "2.8lt agua",
+        "35ml aceite de oliva",
+        "agregar poolish"
+      ]
+    };
+
+    let currentRecipe = null;
+    let currentIndex = 0;
+    let ingredients = [];
+
+    const menu = document.getElementById('menu');
+    const ingredientView = document.getElementById('ingredient-view');
+    const recipeList = document.getElementById('recipe-list');
+    const recipeTitle = document.getElementById('recipe-title');
+    const ingredientText = document.getElementById('ingredient-text');
+    const progress = document.getElementById('progress');
+    const backBtn = document.getElementById('back-btn');
+
+    // Generar botones de recetas
+    Object.keys(recipes).forEach(name => {
+      const btn = document.createElement('button');
+      btn.className = 'recipe-btn';
+      btn.textContent = name;
+      btn.onclick = () => startRecipe(name);
+      recipeList.appendChild(btn);
+    });
+
+    function startRecipe(name) {
+      currentRecipe = name;
+      ingredients = recipes[name];
+      currentIndex = 0;
+      showIngredient();
+      menu.style.display = 'none';
+      ingredientView.style.display = 'flex';
+    }
+
+    function showIngredient() {
+      if (currentIndex >= ingredients.length) {
+        // Terminado
+        ingredientView.className = 'finished';
+        ingredientText.textContent = '✓ ¡Listo!';
+        progress.textContent = 'Toca para volver al menú';
+        return;
+      }
+      
+      // Remover clases anteriores
+      ingredientView.className = '';
+      ingredientView.classList.add('bg-' + (currentIndex % 12));
+      
+      ingredientText.textContent = ingredients[currentIndex];
+      recipeTitle.textContent = currentRecipe;
+      progress.textContent = `${currentIndex + 1} / ${ingredients.length}`;
+    }
+
+    function nextIngredient() {
+      if (currentIndex >= ingredients.length) {
+        // Volver al menú
+        goBack();
+        return;
+      }
+      currentIndex++;
+      showIngredient();
+    }
+
+    function goBack() {
+      menu.style.display = 'flex';
+      ingredientView.style.display = 'none';
+      ingredientView.className = '';
+      currentRecipe = null;
+      currentIndex = 0;
+    }
+
+    // Event listeners
+    ingredientView.onclick = (e) => {
+      if (e.target !== backBtn) {
+        nextIngredient();
+      }
+    };
+
+    backBtn.onclick = (e) => {
+      e.stopPropagation();
+      goBack();
+    };
+
+    document.addEventListener('keydown', (e) => {
+      if (ingredientView.style.display === 'flex') {
+        if (e.key === 'Escape') {
+          goBack();
+        } else {
+          nextIngredient();
+        }
+      }
+    });
+
+    // Registrar Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>
