@@ -139,19 +139,10 @@
       opacity: 0.5;
     }
     
-    /* Colores para ingredientes */
-    .bg-0 { background: #ff6b6b; color: #1a1a2e; }
-    .bg-1 { background: #4ecdc4; color: #1a1a2e; }
-    .bg-2 { background: #ffe66d; color: #1a1a2e; }
-    .bg-3 { background: #95e1d3; color: #1a1a2e; }
-    .bg-4 { background: #f38181; color: #1a1a2e; }
-    .bg-5 { background: #aa96da; color: #1a1a2e; }
-    .bg-6 { background: #fcbad3; color: #1a1a2e; }
-    .bg-7 { background: #a8d8ea; color: #1a1a2e; }
-    .bg-8 { background: #ffd93d; color: #1a1a2e; }
-    .bg-9 { background: #6bcb77; color: #1a1a2e; }
-    .bg-10 { background: #c9b1ff; color: #1a1a2e; }
-    .bg-11 { background: #ff9a8b; color: #1a1a2e; }
+    /* Colores base para ingredientes - se aplican via JS */
+    #ingredient-view {
+      transition: background-color 0.3s ease;
+    }
     
     /* Pantalla final */
     .finished {
@@ -251,6 +242,49 @@
     let currentIndex = 0;
     let ingredients = [];
 
+    // Colores semánticos por ingrediente
+    const ingredientColors = {
+      'harina integral': { bg: '#c4a574', text: '#2d1810' },  // marrón trigo integral
+      'harina': { bg: '#f5f0e6', text: '#3d3225' },           // beige crema (harina blanca)
+      'sal': { bg: '#a8d4e6', text: '#1a3a4a' },              // azul cristalino
+      'azúcar': { bg: '#ffe4ec', text: '#4a2c35' },           // rosa dulce
+      'manteca': { bg: '#ffe566', text: '#4a4020' },          // amarillo manteca
+      'margarina': { bg: '#fff3b0', text: '#4a4520' },        // amarillo pálido
+      'suero': { bg: '#e8f4f8', text: '#2a4550' },            // blanco azulado lácteo
+      'levadura': { bg: '#d4a574', text: '#2d1810' },         // marrón orgánico
+      'mejorador': { bg: '#c9b1ff', text: '#2a1f4a' },        // púrpura (aditivo)
+      'agua': { bg: '#7ec8e3', text: '#0a3d5c' },             // azul agua
+      'aceite': { bg: '#a8c686', text: '#2d3a1f' },           // verde oliva
+      'poolish': { bg: '#e6d5b8', text: '#3d3225' },          // beige fermentado
+      'fermentar': { bg: '#ffb347', text: '#4a2c10' },        // naranja (acción/tiempo)
+      'paso': { bg: '#5c6370', text: '#ffffff' },             // gris (instrucción)
+      'agregar': { bg: '#98d1a8', text: '#1a3d25' },          // verde claro (acción)
+      'default': { bg: '#e0e0e0', text: '#2d2d2d' }           // gris neutro
+    };
+
+    function getIngredientColor(text) {
+      const lower = text.toLowerCase();
+      
+      // Orden importa: "harina integral" antes que "harina"
+      if (lower.includes('paso')) return ingredientColors['paso'];
+      if (lower.includes('harina integral')) return ingredientColors['harina integral'];
+      if (lower.includes('harina')) return ingredientColors['harina'];
+      if (lower.includes('sal')) return ingredientColors['sal'];
+      if (lower.includes('azúcar')) return ingredientColors['azúcar'];
+      if (lower.includes('manteca')) return ingredientColors['manteca'];
+      if (lower.includes('margarina')) return ingredientColors['margarina'];
+      if (lower.includes('suero')) return ingredientColors['suero'];
+      if (lower.includes('levadura')) return ingredientColors['levadura'];
+      if (lower.includes('mejorador')) return ingredientColors['mejorador'];
+      if (lower.includes('agua')) return ingredientColors['agua'];
+      if (lower.includes('aceite')) return ingredientColors['aceite'];
+      if (lower.includes('poolish')) return ingredientColors['poolish'];
+      if (lower.includes('fermentar')) return ingredientColors['fermentar'];
+      if (lower.includes('agregar')) return ingredientColors['agregar'];
+      
+      return ingredientColors['default'];
+    }
+
     const menu = document.getElementById('menu');
     const ingredientView = document.getElementById('ingredient-view');
     const recipeList = document.getElementById('recipe-list');
@@ -281,14 +315,18 @@
       if (currentIndex >= ingredients.length) {
         // Terminado
         ingredientView.className = 'finished';
+        ingredientView.style.backgroundColor = '';
+        ingredientView.style.color = '';
         ingredientText.textContent = '✓ ¡Listo!';
         progress.textContent = 'Toca para volver al menú';
         return;
       }
       
-      // Remover clases anteriores
+      // Obtener color semántico del ingrediente
+      const color = getIngredientColor(ingredients[currentIndex]);
       ingredientView.className = '';
-      ingredientView.classList.add('bg-' + (currentIndex % 12));
+      ingredientView.style.backgroundColor = color.bg;
+      ingredientView.style.color = color.text;
       
       ingredientText.textContent = ingredients[currentIndex];
       recipeTitle.textContent = currentRecipe;
@@ -309,6 +347,8 @@
       menu.style.display = 'flex';
       ingredientView.style.display = 'none';
       ingredientView.className = '';
+      ingredientView.style.backgroundColor = '';
+      ingredientView.style.color = '';
       currentRecipe = null;
       currentIndex = 0;
     }
